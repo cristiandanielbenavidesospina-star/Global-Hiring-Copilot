@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "HqEfs3TJTACHq6B2Sq5It"
+uri = "file://README.md"
+type = "text"
+title = "README — Global Hiring Copilot"
