@@ -32,6 +32,12 @@
 
 The tool is designed for serious enterprise use. Every report is persisted to PostgreSQL, revisitable from the History page, and aggregated into an Insights dashboard so teams can track hiring patterns across regions over time.
 
+# Global Hiring Copilot
+
+## Demo Video
+
+[![Watch Demo](dashboard.png)](HiringCopilot.mp4)
+
 ---
 
 ## Features
