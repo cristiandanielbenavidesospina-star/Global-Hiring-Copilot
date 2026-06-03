@@ -13,7 +13,8 @@ import { logger } from "../lib/logger";
 const router = Router();
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
 });
 
 async function generateHiringReport(
@@ -46,14 +47,14 @@ Provide a structured hiring analysis in JSON format with these exact keys:
 Be specific and actionable. Reference actual laws, regulations, or cultural norms where relevant. Focus on practical business value.`;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "llama-3.3-70b-versatile",
     max_tokens: 1500,
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
   });
 
   const content = response.choices[0]?.message?.content;
-  if (!content) throw new Error("No response from OpenAI");
+  if (!content) throw new Error("No response from Groq");
 
   const parsed = JSON.parse(content);
   return {
