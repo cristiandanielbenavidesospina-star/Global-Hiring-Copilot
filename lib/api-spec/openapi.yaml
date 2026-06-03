@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Global Hiring Copilot API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: hiring
+    description: Hiring analysis operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,122 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /hiring/analyze:
+    post:
+      operationId: analyzeHiring
+      tags: [hiring]
+      summary: Analyze hiring opportunity
+      description: Generate AI-powered hiring recommendations for a country/role/company size
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HiringQueryInput"
+      responses:
+        "201":
+          description: Analysis created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HiringReport"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /hiring/history:
+    get:
+      operationId: listHiringHistory
+      tags: [hiring]
+      summary: List hiring search history
+      description: Returns paginated list of previous hiring analyses
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of hiring reports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HiringHistoryResponse"
+
+  /hiring/history/{id}:
+    get:
+      operationId: getHiringReport
+      tags: [hiring]
+      summary: Get a specific hiring report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Hiring report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HiringReport"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    delete:
+      operationId: deleteHiringReport
+      tags: [hiring]
+      summary: Delete a hiring report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /hiring/stats:
+    get:
+      operationId: getHiringStats
+      tags: [hiring]
+      summary: Get hiring activity stats
+      description: Returns aggregated stats — top countries, roles, total analyses
+      responses:
+        "200":
+          description: Hiring statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HiringStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +152,152 @@ components:
       required:
         - status
 
+    HiringQueryInput:
+      type: object
+      required:
+        - country
+        - role
+        - companySize
+      properties:
+        country:
+          type: string
+          description: Target country for hiring
+        role:
+          type: string
+          description: Job role to hire for
+        companySize:
+          type: string
+          enum: [startup, smb, enterprise]
+          description: Company size category
+
+    HiringReport:
+      type: object
+      required:
+        - id
+        - country
+        - role
+        - companySize
+        - summary
+        - hiringWorkflow
+        - risks
+        - onboardingPlan
+        - complianceNotes
+        - riskAssessment
+        - createdAt
+      properties:
+        id:
+          type: integer
+        country:
+          type: string
+        role:
+          type: string
+        companySize:
+          type: string
+        summary:
+          type: string
+          description: AI-generated executive summary
+        hiringWorkflow:
+          type: array
+          items:
+            type: string
+          description: Recommended step-by-step hiring workflow
+        risks:
+          type: array
+          items:
+            type: string
+          description: Potential hiring risks
+        onboardingPlan:
+          type: array
+          items:
+            type: string
+          description: Suggested onboarding checklist
+        complianceNotes:
+          type: array
+          items:
+            type: string
+          description: Compliance and legal considerations
+        riskAssessment:
+          type: string
+          enum: [low, medium, high]
+          description: Overall hiring risk level
+        interviewProcess:
+          type: array
+          items:
+            type: string
+          description: Recommended interview process steps
+        createdAt:
+          type: string
+          format: date-time
+
+    HiringHistoryResponse:
+      type: object
+      required:
+        - reports
+        - total
+        - page
+        - limit
+      properties:
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/HiringReport"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    HiringStats:
+      type: object
+      required:
+        - totalAnalyses
+        - topCountries
+        - topRoles
+        - riskBreakdown
+      properties:
+        totalAnalyses:
+          type: integer
+        topCountries:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountStat"
+        topRoles:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountStat"
+        riskBreakdown:
+          $ref: "#/components/schemas/RiskBreakdown"
+
+    CountStat:
+      type: object
+      required:
+        - name
+        - count
+      properties:
+        name:
+          type: string
+        count:
+          type: integer
+
+    RiskBreakdown:
+      type: object
+      required:
+        - low
+        - medium
+        - high
+      properties:
+        low:
+          type: integer
+        medium:
+          type: integer
+        high:
+          type: integer
+
+    ApiError:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
